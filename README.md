@@ -16,7 +16,7 @@ gcloud auth application-default login \
 
 ```bash
 rye sync
-rye run python src/summarizer/app.py --urls \
+rye run python src/summarizer/run.py --urls \
     https://www.google.com \
     https://www.yahoo.co.jp \
 ```

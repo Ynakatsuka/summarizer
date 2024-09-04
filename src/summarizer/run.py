@@ -58,6 +58,8 @@ def fetch_content_and_images(url: str) -> Dict[str, Union[str, List[Dict[str, st
                     else:
                         if url.startswith("https://ar5iv.labs.arxiv.org/"):
                             full_url = "https://ar5iv.labs.arxiv.org/" + src
+                        else:
+                            full_url = src
 
                         try:
                             response = requests.get(full_url, timeout=10)
@@ -187,8 +189,13 @@ def main(urls: List[str]) -> None:
         urls (List[str]): List of URLs to analyze
     """
     output_path = Path("output.csv")
+    scraped_urls = (
+        pd.read_csv(output_path)["url"].tolist() if output_path.exists() else []
+    )
 
     for url in urls:
+        if url in scraped_urls:
+            continue
         print(f"Fetching content from {url}")
         content_and_images = fetch_content_and_images(url)
         if content_and_images["text"]:
