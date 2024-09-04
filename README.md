@@ -14,9 +14,23 @@ gcloud auth application-default login \
 
 ### Get Started
 
+Setup Environment
+
 ```bash
 rye sync
+```
+
+Summarize the content of the URLs
+
+```bash
 rye run python src/summarizer/run.py --urls \
     https://www.google.com \
     https://www.yahoo.co.jp \
+```
+
+Summarize the content of the PDF files in the GitHub repository
+
+
+```bash
+rye run python src/summarizer/run.py --repo_url https://github.com/tangxyw/RecSysPapers
 ```

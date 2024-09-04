@@ -11,6 +11,7 @@ import pandas as pd
 import PyPDF2
 import requests
 from bs4 import BeautifulSoup
+from crawler import get_pdf_urls_from_github
 
 MODEL_NAMES = ["gemini-1.5-pro", "gemini-1.5-flash"]
 
@@ -32,7 +33,7 @@ def fetch_content_and_images(url: str) -> Dict[str, Union[str, List[Dict[str, st
         response = requests.get(url, timeout=10)
         response.raise_for_status()
 
-        if url.lower().endswith(".pdf"):
+        if not url.startswith("https://github.com") and url.lower().endswith(".pdf"):
             # Process PDF file
             pdf_file = BytesIO(response.content)
             pdf_reader = PyPDF2.PdfReader(pdf_file)
@@ -225,5 +226,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--urls", nargs="+", help="Space-separated list of URLs to analyze"
     )
+    parser.add_argument("--repo_url", type=str, help="GitHub repository URL to analyze")
     args = parser.parse_args()
-    main(args.urls)
+
+    urls = get_pdf_urls_from_github(args.repo_url) if args.repo_url else args.urls
+    main(urls)
