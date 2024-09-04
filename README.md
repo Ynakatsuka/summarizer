@@ -1,5 +1,7 @@
 # summarizer
 
+summarize the content of the URL using [Gemini API](https://ai.google.dev/pricing?hl=ja).
+
 ### Auth
 
 Refer to https://ai.google.dev/palm_docs/oauth_quickstart
