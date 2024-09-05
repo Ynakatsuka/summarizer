@@ -158,7 +158,6 @@ def analyze_content_and_images(
     ]
     response = model.generate_content([prompt.format(content=content)] + image_parts)
 
-    # parse response
     items = {}
     patterns = {
         "title": r"<<<1\.\s*(.*?)(?=<<<2\.|$)",
@@ -170,7 +169,11 @@ def analyze_content_and_images(
     for key, pattern in patterns.items():
         match = re.search(pattern, response.text, re.DOTALL)
         if match:
-            items[key] = match.group(1).strip().replace("<<<", "").replace(">>>", "")
+            content = match.group(1).strip()
+            # すべての項目について<<<N. >>> と >>> を削除
+            content = re.sub(r"<<<\d+\.\s*", "", content)
+            content = content.replace(">>>", "").strip()
+            items[key] = content
 
     if "labels" in items:
         items["labels"] = [label.strip() for label in items["labels"].split(",")]
