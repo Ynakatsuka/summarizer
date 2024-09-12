@@ -1,7 +1,7 @@
 import argparse
 import base64
+import json
 import os
-import re
 from io import BytesIO
 from pathlib import Path
 from typing import Dict, List, Union
@@ -95,12 +95,8 @@ def analyze_content_and_images(
     Returns:
         Dict[str, Union[str, List[str]]]: A dictionary containing the analysis results
     """
-    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-    model = genai.GenerativeModel(model_name)
-
     prompt = """
-    以下の論文/記事の内容と関連する図表を解析し、以下の形式で日本語で要約してください。
-    後でパースするために、各項目についてのみ以下のように必ず<<<>>>で囲んで出力してください。
+    以下の論文/記事の内容と関連する図表を解析し、以下の内容を含む日本語で要約してください。
 
     <<<1. 論文/記事のタイトル>>>
     <<<2. 概要>>>
@@ -146,35 +142,32 @@ def analyze_content_and_images(
     - アルゴリズムがある場合はPythonコードで出力し、コードブロックとして表示する
     - 複数の手法を組み合わせて使用している場合、以下の観点を踏まえて説明する
         - 手法間の関連性や相互作用 
-        - 類似の手法との比較 
-        - 本研究で使用した手法の優位性や特徴 
+        - 類似の手法との比較
+        - 本研究で使用した手法の優位性や特徴
+
+    出力は以下のキーを含むJSON形式で出力してください。
+    - title: 論文/記事のタイトル
+    - summary: 概要
+    - labels: 技術的なラベル
+    - code_link: コードリンク
+    - description: 詳細な内容 (markdown形式)
 
     コンテンツ:
     {content}
     """
+    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+    model = genai.GenerativeModel(
+        model_name, generation_config={"response_mime_type": "application/json"}
+    )
     image_parts = [
         {"mime_type": image["mime_type"], "data": base64.b64decode(image["data"])}
         for image in images
     ]
     response = model.generate_content([prompt.format(content=content)] + image_parts)
 
-    items = {}
-    patterns = {
-        "title": r"<<<1\.\s*(.*?)(?=<<<2\.|$)",
-        "summary": r"<<<2\.\s*(.*?)(?=<<<3\.|$)",
-        "labels": r"<<<3\.\s*(.*?)(?=<<<4\.|$)",
-        "code_link": r"<<<4\.\s*(.*?)(?=<<<5\.|$)",
-        "description": r"<<<5\.\s*(.*?)(?=$)",
-    }
-    for key, pattern in patterns.items():
-        match = re.search(pattern, response.text, re.DOTALL)
-        if match:
-            content = match.group(1).strip()
-            # すべての項目について<<<N. >>> と >>> を削除
-            content = re.sub(r"<<<\d+\.\s*", "", content)
-            content = content.replace(">>>", "").strip()
-            items[key] = content
+    items = json.loads(response.text, strict=False)
 
+    # postprocessing
     if "labels" in items:
         items["labels"] = [label.strip() for label in items["labels"].split(",")]
 
