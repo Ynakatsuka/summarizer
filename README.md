@@ -30,7 +30,6 @@ rye run python src/summarizer/run.py --urls \
 
 Summarize the content of the PDF files in the GitHub repository
 
-
 ```bash
 rye run python src/summarizer/run.py --repo_url https://github.com/tangxyw/RecSysPapers
 ```
