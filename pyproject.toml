@@ -6,7 +6,7 @@ authors = [
     { name = "Ynakatsuka", email = "nk.tsssa@gmail.com" }
 ]
 dependencies = [
-    "google-generativeai>=0.7.2",
+    "google-generativeai>=0.8.0",
     "requests>=2.32.3",
     "beautifulsoup4>=4.12.3",
     "pillow>=10.4.0",

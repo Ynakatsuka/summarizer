@@ -20,7 +20,7 @@ certifi==2024.8.30
     # via requests
 charset-normalizer==3.3.2
     # via requests
-google-ai-generativelanguage==0.6.6
+google-ai-generativelanguage==0.6.9
     # via google-generativeai
 google-api-core==2.19.2
     # via google-ai-generativelanguage
@@ -36,7 +36,7 @@ google-auth==2.34.0
     # via google-generativeai
 google-auth-httplib2==0.2.0
     # via google-api-python-client
-google-generativeai==0.7.2
+google-generativeai==0.8.0
     # via summarizer
 googleapis-common-protos==1.65.0
     # via google-api-core
