@@ -12,6 +12,7 @@ import PyPDF2
 import requests
 from bs4 import BeautifulSoup
 from crawler import get_pdf_urls_from_github
+from playwright.sync_api import sync_playwright
 
 MODEL_NAMES = ["gemini-1.5-pro", "gemini-1.5-flash"]
 
@@ -24,57 +25,69 @@ def fetch_content_and_images(url: str) -> Dict[str, Union[str, List[Dict[str, st
         url (str): The URL to fetch content from
 
     Returns:
-        Dict[str, Union[str, List[str]]]: A dictionary containing text content and a list of image URLs
+        Dict[str, Union[str, List[Dict[str, str]]]]: A dictionary containing text content and a list of image data
 
     Raises:
         requests.RequestException: If an error occurs during the request
     """
     try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
+        # Fetch page contents using Playwright
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            context = browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            )
+            page = context.new_page()
+            page.goto(url)
+            page.wait_for_load_state("networkidle")
+            contents = page.content().encode("utf-8")
+            browser.close()
 
+        # Process PDF file
         if not url.startswith("https://github.com") and url.lower().endswith(".pdf"):
-            # Process PDF file
-            pdf_file = BytesIO(response.content)
+            pdf_file = BytesIO(contents)
             pdf_reader = PyPDF2.PdfReader(pdf_file)
-            text_content = ""
-            for page in pdf_reader.pages:
-                text_content += page.extract_text()
-            images = []  # Image extraction from PDF is complex, so we skip it here
-        else:
-            # Process HTML
-            soup = BeautifulSoup(response.content, "html.parser")
-            text_content = soup.get_text(strip=True)
-            images = []
-            for img in soup.find_all("img"):
-                if "src" in img.attrs:
-                    src = img["src"]
-                    if src.startswith("data:image"):
-                        images.append(
-                            {
-                                "mime_type": src.split(";")[0].split(":")[1],
-                                "data": src.split(",")[1],
-                            }
-                        )
-                    else:
-                        if url.startswith("https://ar5iv.labs.arxiv.org/"):
-                            full_url = "https://ar5iv.labs.arxiv.org/" + src
-                        else:
-                            full_url = src
+            text_content = "".join(page.extract_text() for page in pdf_reader.pages)
+            return {"text": text_content, "images": []}
 
-                        try:
-                            response = requests.get(full_url, timeout=10)
-                            response.raise_for_status()
-                            img_data = base64.b64encode(response.content).decode(
-                                "utf-8"
-                            )
-                            extension = full_url.split(".")[-1]
-                            mime_type = response.headers.get(
-                                "Content-Type", f"image/{extension}"
-                            )
-                            images.append({"mime_type": mime_type, "data": img_data})
-                        except requests.RequestException as e:
-                            print(f"Error fetching image from {full_url}: {e}")
+        # Process HTML content
+        soup = BeautifulSoup(contents, "html.parser")
+        text_content = soup.get_text(strip=True)
+        images = []
+
+        # Extract images
+        for img in soup.find_all("img"):
+            if "src" in img.attrs:
+                src = img["src"]
+                if src.startswith("data:image"):
+                    # Process data URI for inline images
+                    mime_type, data = src.split(",", 1)
+                    images.append(
+                        {
+                            "mime_type": mime_type.split(":")[1].split(";")[0],
+                            "data": data,
+                        }
+                    )
+                else:
+                    # Get full image URL
+                    full_url = (
+                        f"https://ar5iv.labs.arxiv.org/{src}"
+                        if url.startswith("https://ar5iv.labs.arxiv.org/")
+                        else src
+                    )
+
+                    # Fetch image data
+                    try:
+                        response = requests.get(full_url, timeout=10)
+                        response.raise_for_status()
+                        img_data = base64.b64encode(response.content).decode("utf-8")
+                        extension = full_url.split(".")[-1]
+                        mime_type = response.headers.get(
+                            "Content-Type", f"image/{extension}"
+                        )
+                        images.append({"mime_type": mime_type, "data": img_data})
+                    except requests.RequestException as e:
+                        print(f"Error fetching image from {full_url}: {e}")
 
         return {"text": text_content, "images": images}
     except requests.RequestException as e:

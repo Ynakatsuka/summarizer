@@ -18,6 +18,7 @@ Setup Environment
 
 ```bash
 rye sync
+rye run playwright install
 ```
 
 Summarize the content of the URLs

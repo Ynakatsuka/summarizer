@@ -41,6 +41,8 @@ google-generativeai==0.8.0
 googleapis-common-protos==1.65.0
     # via google-api-core
     # via grpcio-status
+greenlet==3.0.3
+    # via playwright
 grpcio==1.66.1
     # via google-api-core
     # via grpcio-status
@@ -51,12 +53,20 @@ httplib2==0.22.0
     # via google-auth-httplib2
 idna==3.8
     # via requests
+iniconfig==2.0.0
+    # via pytest
 numpy==2.1.1
     # via pandas
+packaging==24.1
+    # via pytest
 pandas==2.2.2
     # via summarizer
 pillow==10.4.0
     # via summarizer
+playwright==1.47.0
+    # via pytest-playwright
+pluggy==1.5.0
+    # via pytest
 proto-plus==1.24.0
     # via google-ai-generativelanguage
     # via google-api-core
@@ -76,16 +86,28 @@ pydantic==2.8.2
     # via google-generativeai
 pydantic-core==2.20.1
     # via pydantic
+pyee==12.0.0
+    # via playwright
 pyparsing==3.1.4
     # via httplib2
 pypdf2==3.0.1
     # via summarizer
+pytest==8.3.3
+    # via pytest-base-url
+    # via pytest-playwright
+pytest-base-url==2.1.0
+    # via pytest-playwright
+pytest-playwright==0.5.2
+    # via summarizer
 python-dateutil==2.9.0.post0
     # via pandas
+python-slugify==8.0.4
+    # via pytest-playwright
 pytz==2024.1
     # via pandas
 requests==2.32.3
     # via google-api-core
+    # via pytest-base-url
     # via summarizer
 rsa==4.9
     # via google-auth
@@ -93,12 +115,15 @@ six==1.16.0
     # via python-dateutil
 soupsieve==2.6
     # via beautifulsoup4
+text-unidecode==1.3
+    # via python-slugify
 tqdm==4.66.5
     # via google-generativeai
 typing-extensions==4.12.2
     # via google-generativeai
     # via pydantic
     # via pydantic-core
+    # via pyee
 tzdata==2024.1
     # via pandas
 uritemplate==4.1.1
