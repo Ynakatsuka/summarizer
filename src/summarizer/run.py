@@ -168,10 +168,10 @@ def analyze_content_and_images(
     items = json.loads(response.text, strict=False)
 
     # postprocessing
-    if "labels" in items:
+    if "labels" in items and isinstance(items["labels"], str):
         items["labels"] = [label.strip() for label in items["labels"].split(",")]
 
-    if "code_link" in items:
+    if "code_link" in items and items["code_link"] is not None:
         if not items["code_link"].lower().startswith("http"):
             items["code_link"] = None
 
