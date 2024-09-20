@@ -178,14 +178,15 @@ def analyze_content_and_images(
     return items
 
 
-def main(urls: List[str]) -> None:
+def main(urls: List[str], output_path: str) -> None:
     """
     Main function to analyze content from given URLs.
 
     Args:
         urls (List[str]): List of URLs to analyze
+        output_path (str): Path to the output CSV file
     """
-    output_path = Path("output.csv")
+    output_path = Path(output_path)
     scraped_urls = (
         pd.read_csv(output_path)["url"].tolist() if output_path.exists() else []
     )
@@ -223,7 +224,15 @@ if __name__ == "__main__":
         "--urls", nargs="+", help="Space-separated list of URLs to analyze"
     )
     parser.add_argument("--repo_url", type=str, help="GitHub repository URL to analyze")
+    parser.add_argument(
+        "--output",
+        type=str,
+        default="output.csv",
+        help="Output CSV file name (default: output.csv)",
+    )
+
     args = parser.parse_args()
 
     urls = get_pdf_urls_from_github(args.repo_url) if args.repo_url else args.urls
-    main(urls)
+    output = args.output
+    main(urls, output)
