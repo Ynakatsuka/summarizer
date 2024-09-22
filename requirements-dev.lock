@@ -105,6 +105,8 @@ python-slugify==8.0.4
     # via pytest-playwright
 pytz==2024.1
     # via pandas
+pyyaml==6.0.2
+    # via summarizer
 requests==2.32.3
     # via google-api-core
     # via pytest-base-url

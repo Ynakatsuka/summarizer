@@ -11,7 +11,7 @@ import pandas as pd
 import PyPDF2
 import requests
 from bs4 import BeautifulSoup
-from crawler import get_pdf_urls_from_github
+from crawler import get_kaggle_solutions, get_pdf_urls_from_github
 from playwright.sync_api import sync_playwright
 
 MODEL_NAMES = ["gemini-1.5-pro", "gemini-1.5-flash"]
@@ -191,12 +191,13 @@ def analyze_content_and_images(
     return items
 
 
-def main(urls: List[str], output_path: str) -> None:
+def main(urls: List[str], metas: List[Dict[str, int]], output_path: str) -> None:
     """
     Main function to analyze content from given URLs.
 
     Args:
         urls (List[str]): List of URLs to analyze
+        metas (List[Dict[str, int]]): List of metadata for each URL
         output_path (str): Path to the output CSV file
     """
     output_path = Path(output_path)
@@ -204,7 +205,7 @@ def main(urls: List[str], output_path: str) -> None:
         pd.read_csv(output_path)["url"].tolist() if output_path.exists() else []
     )
 
-    for url in urls:
+    for url, meta in zip(urls, metas):
         if url in scraped_urls:
             continue
         print(f"Fetching content from {url}")
@@ -219,6 +220,9 @@ def main(urls: List[str], output_path: str) -> None:
                     )
                     result["url"] = url
                     result["model_name"] = model_name
+                    if meta is not None:
+                        for key, value in meta.items():
+                            result[key] = value
                     pd.DataFrame([result]).to_csv(
                         output_path,
                         mode="a",
@@ -238,6 +242,9 @@ if __name__ == "__main__":
     )
     parser.add_argument("--repo_url", type=str, help="GitHub repository URL to analyze")
     parser.add_argument(
+        "--kaggle_title", type=str, help="Kaggle competition title to analyze"
+    )
+    parser.add_argument(
         "--output",
         type=str,
         default="output.csv",
@@ -246,6 +253,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    urls = get_pdf_urls_from_github(args.repo_url) if args.repo_url else args.urls
-    output = args.output
-    main(urls, output)
+    if args.repo_url:
+        urls = get_pdf_urls_from_github(args.repo_url)
+        metas = [None] * len(urls)
+    elif args.kaggle_title:
+        urls, metas = get_kaggle_solutions(args.kaggle_title)
+    else:
+        urls = args.urls
+        metas = [None] * len(urls)
+    main(urls, metas, args.output)

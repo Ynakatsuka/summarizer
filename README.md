@@ -27,10 +27,23 @@ Summarize the content of the URLs
 rye run python src/summarizer/run.py --urls \
     https://www.google.com \
     https://www.yahoo.co.jp \
+    --output output.csv
 ```
 
 Summarize the content of the PDF files in the GitHub repository
 
 ```bash
-rye run python src/summarizer/run.py --repo_url https://github.com/tangxyw/RecSysPapers
+rye run python src/summarizer/run.py --repo_url https://github.com/tangxyw/RecSysPapers --output recsys_papers.csv
+```
+
+Summarize the content of the Kaggle solutions and output to CSV
+
+```bash
+rye run python src/summarizer/run.py --kaggle_title otto-recommender-system --output otto_solutions.csv
+```
+
+Create a solution matrix for Kaggle solutions
+
+```bash
+rye run python src/summarizer/matrix.py --input otto_solutions.csv
 ```
